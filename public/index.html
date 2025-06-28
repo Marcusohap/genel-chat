@@ -7,12 +7,11 @@
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <style>
-    /* Tam ekran için html ve body */
     html, body {
       margin: 0; padding: 0;
       height: 100%;
       width: 100%;
-      overflow-x: hidden; /* sağa sola kaydırmayı engelle */
+      overflow-x: hidden;
       font-family: 'Inter', sans-serif;
       background: #0f172a;
       color: #e2e8f0;
@@ -21,25 +20,22 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh; /* viewport yüksekliği */
-      /* padding kaldırıldı */
+      height: 100vh;
     }
-
     .chat-container {
       background: #1e293b;
-      width: 100vw; /* tam ekran genişliği */
-      height: 100vh; /* tam ekran yüksekliği */
-      border-radius: 0; /* köşeler düz */
-      box-shadow: none; /* gölge kaldırıldı */
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      box-shadow: none;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      position: fixed; /* sabit pozisyon, kaydırılsa bile */
+      position: fixed;
       top: 0; left: 0;
       max-width: 100vw;
       max-height: 100vh;
     }
-
     .chat-header {
       background: #334155;
       padding: 12px 16px 8px 16px;
@@ -49,9 +45,8 @@
       border-bottom: 1px solid #475569;
       position: relative;
       user-select: none;
-      flex-shrink: 0; /* sabit yükseklik */
+      flex-shrink: 0;
     }
-
     .online-count {
       position: absolute;
       right: 16px;
@@ -60,7 +55,6 @@
       color: #94a3b8;
       font-weight: 400;
     }
-
     .messages {
       flex: 1;
       padding: 16px;
@@ -70,7 +64,6 @@
       gap: 10px;
       scroll-behavior: smooth;
     }
-
     .message {
       padding: 10px 14px;
       border-radius: 8px;
@@ -80,45 +73,24 @@
       line-height: 1.3;
       box-shadow: 0 1px 3px rgba(0,0,0,0.2);
       position: relative;
-    }
-
-    .message.self {
-      background: #3b82f6;
+      cursor: pointer;
       color: white;
+    }
+    .message.self {
       align-self: flex-end;
       border-bottom-right-radius: 2px;
     }
-
     .message.other {
-      background: #475569;
       align-self: flex-start;
       border-bottom-left-radius: 2px;
     }
-
-    .reply-indicator {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 14px;
-      height: 14px;
-      background: #ef4444;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid #1e293b;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 10px;
+    .username {
       font-weight: 700;
+      margin-bottom: 4px;
+      font-size: 13px;
       user-select: none;
-      transition: background 0.3s;
+      text-shadow: 0 0 3px rgba(0,0,0,0.7);
     }
-
-    .reply-indicator:hover {
-      background: #b91c1c;
-    }
-
     .reply-preview {
       font-size: 13px;
       color: #cbd5e1;
@@ -132,11 +104,6 @@
       text-overflow: ellipsis;
       cursor: default;
     }
-
-    .reply-preview.self {
-      border-left-color: #2563eb;
-    }
-
     .chat-form {
       display: flex;
       border-top: 1px solid #475569;
@@ -144,9 +111,8 @@
       background: #334155;
       align-items: center;
       gap: 8px;
-      flex-shrink: 0; /* sabit yükseklik */
+      flex-shrink: 0;
     }
-
     .chat-form input {
       flex: 1;
       padding: 12px;
@@ -158,11 +124,9 @@
       border-radius: 6px;
       transition: background 0.3s ease;
     }
-
     .chat-form input:focus {
       background: #28343f;
     }
-
     .chat-form button, .chat-form .cancel-reply {
       padding: 12px 16px;
       background: #3b82f6;
@@ -174,31 +138,77 @@
       transition: background 0.3s ease;
       user-select: none;
     }
-
     .chat-form button:hover, .chat-form .cancel-reply:hover {
       background: #2563eb;
     }
-
     .chat-form .cancel-reply {
       background: #ef4444;
     }
-
     .chat-form .cancel-reply:hover {
       background: #b91c1c;
     }
-
     ::-webkit-scrollbar {
       width: 6px;
     }
-
     ::-webkit-scrollbar-thumb {
       background: #334155;
       border-radius: 4px;
     }
+    #usernameOverlay {
+      position: fixed;
+      top:0; left:0; width:100vw; height:100vh;
+      background: rgba(15,23,42,0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9999;
+      color: white;
+      font-family: 'Inter', sans-serif;
+    }
+    #usernameOverlay input {
+      font-size: 18px;
+      padding: 12px 16px;
+      border-radius: 6px;
+      border: none;
+      outline: none;
+      width: 250px;
+      margin-top: 12px;
+      background: #1e293b;
+      color: white;
+    }
+    #usernameOverlay button {
+      margin-top: 16px;
+      background: #3b82f6;
+      border: none;
+      padding: 12px 20px;
+      color: white;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    #usernameOverlay button:hover {
+      background: #2563eb;
+    }
+    #usernameError {
+      margin-top: 8px;
+      color: #ef4444;
+      font-weight: 600;
+      font-size: 14px;
+      min-height: 18px;
+    }
   </style>
 </head>
 <body>
-  <div class="chat-container">
+  <div id="usernameOverlay">
+    <div>Chat için kullanıcı adınızı girin (max 10 karakter):</div>
+    <input type="text" id="usernameInput" maxlength="10" autocomplete="off" />
+    <button id="usernameSubmit">Giriş Yap</button>
+    <div id="usernameError"></div>
+  </div>
+
+  <div class="chat-container" style="display:none;">
     <div class="chat-header">
       GENEL CHAT
       <span class="online-count" id="onlineCount">Çevrimiçi: 0</span>
@@ -210,41 +220,73 @@
         autocomplete="off"
         maxlength="60"
         placeholder="Mesaj yaz (max 60 karakter)..."
+        disabled
       />
-      <button type="submit">Gönder</button>
+      <button type="submit" disabled>Gönder</button>
       <button type="button" class="cancel-reply" title="Yanıtlamayı iptal et" style="display:none;">İptal</button>
     </form>
   </div>
 
   <script>
-    // Mevcut js kodun burada kalabilir, değişiklik gerek yok
-    const socket = io(); // Sunucu adresini gerektiği gibi değiştir
+    const socket = io(); // Gerektiğinde sunucu adresini değiştir
 
+    // Elemanlar
+    const usernameOverlay = document.getElementById('usernameOverlay');
+    const usernameInput = document.getElementById('usernameInput');
+    const usernameSubmit = document.getElementById('usernameSubmit');
+    const usernameError = document.getElementById('usernameError');
+    const chatContainer = document.querySelector('.chat-container');
     const form = document.getElementById('form');
     const input = document.getElementById('input');
     const messagesContainer = document.getElementById('messages');
     const onlineCountElem = document.getElementById('onlineCount');
     const cancelReplyBtn = form.querySelector('.cancel-reply');
 
-    const userId = Math.random().toString(36).substring(2, 10);
+    let username = null;
+    let userId = null;
+    let replyingToId = null;
 
+    // Renk üretimi (kullanıcı adına göre)
+    function stringToColor(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      let color = '#';
+      for (let i = 0; i < 3; i++) {
+        const value = (hash >> (i * 8)) & 0xFF;
+        color += ('00' + value.toString(16)).substr(-2);
+      }
+      return color;
+    }
+
+    // Yasaklı kelimeler
     const bannedWords = [
   "amk", "ananı", "ananı sikiyim", "aq", "piç", "orospu", "siktir", "göt",
   "yarak", "kahpe", "ibne", "sürtük", "mal", "gerizekalı", "şerefsiz",
   "dangalak", "bok", "daşşak", "kaşar", "kaltak", "gavur", "ebenin amı",
   "amcık", "yarak kafalı", "pezevenk", "salak", "aptal", "puşt", "gavat",
-  "pezevenk", "amına koyayım", "yavşak", "sikik", "piç kurusu", "domuz",
+  "amına koyayım", "yavşak", "sikik", "piç kurusu", "domuz",
   "orospu çocuğu", "am", "amına", "amcık çocuğu", "kıç", "sikiş", "sikik piç",
   "şapşal", "gerzek", "bela", "oç", "ibnelik", "ananın amı", "ananın amk",
-  "yarak", "amcık", "sikmek", "sikerim", "amcıklar", "yarrak", "amcık oğlu",
-  "puşt", "götveren", "ebeni sikeyim", "ananı sikeyim", "pezevenk", "amına",
-  "ebenin oğlu", "piç kurusu", "amına koyayım", "amı", "siktiğimin",
-  "yarak kafalı", "yarak", "salak", "aptal", "boktan", "şerefsiz", "mal",
-  "gerizekalı", "götveren", "döl", "amcık", "kaşar", "kaltak", "gavat",
-  "sürtük", "amcık çocuğu", "amına koyayım", "ananı sikeyim", "amk", "bok",
-  "piç", "sik", "ananın amı", "ananın amk", "siktir git", "göt", "yarak",
-  "amcık", "kaltak", "kahpe", "şerefsiz", "sürtük", "dangalak", "aptal",
-  "gerzek", "salak", "mal", "amına koyayım", "yavşak", "amcık oğlu", "amına",
+  "sikmek", "sikerim", "amcıklar", "amcık oğlu",
+  "götveren", "ebeni sikeyim", "porno", "çocuk pornosu", "cocuk prno",
+  "escort", "eskort", "siktim", "t.me", "telegram", "http", "https", "www",
+  "link", "reklam", "spam", "spamcı", "hacker", "hack", "ddos", "troll",
+  "trolling", "scam", "dolandırıcı", "dolandırma", "admin", "moderator",
+  "yarrak", "pezevenk", "kaltak", "amına koyayım", "yarak kafalı",
+  "piç kurusu", "sikik", "amcık oğlu", "bok", "şerefsiz", "kahpe",
+  "sürtük", "gerizekalı", "mal", "salak", "aptal", "dangalak", "bela",
+  "oç", "ibne", "amcık", "kıç", "amcıklar", "yavşak", "amcık oğlu",
+  "götveren", "piç", "orospu çocuğu", "siktir git", "kaltak", "amk",
+  "gavat", "kaşar", "orospu", "boktan", "götveren", "sik", "yarak",
+  "amına", "amcık çocuğu", "amına koyayım", "kıç", "piç kurusu", "sikik piç",
+  "şapşal", "gerzek", "bela", "oç", "ibnelik", "ananın amı", "ananın amk",
+  "yarak kafalı", "amcık", "sikmek", "sikerim", "amcıklar", "amcık oğlu",
+  "götveren", "ebeni sikeyim", "ananı sikeyim", "bok", "piç", "sik",
+  "ananın amı", "ananın amk", "siktir git", "göt", "yarak", "amcık",
+  "kaltak", "kahpe", "şerefsiz", "sürtük", "dangalak", "aptal", "gerzek",
+  "salak", "mal", "amına koyayım", "yavşak", "amcık oğlu", "amına",
   "yarrak", "piç kurusu", "ebeni sikeyim", "ananı sikeyim", "bok", "götveren",
   "amcık", "yarak", "mal", "aptal", "şapşal", "dangalak", "gerizekalı", "mal",
   "bok", "yarak kafalı", "amına koyayım", "puşt", "gavat", "pezevenk",
@@ -252,163 +294,184 @@
   "amcık oğlu", "yavşak", "götveren", "sürtük", "kaltak", "kaşar",
   "kahpe", "şerefsiz", "mal", "gerizekalı", "dangalak", "aptal", "salak",
   "boktan", "yarak", "amcık", "piç kurusu", "amına koyayım", "ebeni sikeyim",
-  "ananı sikeyim", "amk", "bok", "piç", "sik", "ananın amı", "ananın amk",
-  "siktir git", "göt", "yarak", "amcık", "kaltak", "kahpe", "şerefsiz",
-  "sürtük", "dangalak", "aptal", "gerzek", "salak", "mal", "amına koyayım",
-  "yavşak", "amcık oğlu", "amına", "yarrak", "piç kurusu", "ebeni sikeyim",
-  "ananı sikeyim", "bok", "götveren", "amcık", "yarak", "mal", "aptal",
-  "şapşal", "dangalak", "gerizekalı", "mal", "bok", "yarak kafalı",
-  "amına koyayım", "puşt", "gavat", "pezevenk", "piç", "orospu çocuğu",
-  "sikik", "amcık", "amına", "amına koyayım", "amcık oğlu", "yavşak",
-  "götveren", "sürtük", "kaltak", "kaşar", "kahpe", "şerefsiz", "mal",
-  "gerizekalı", "dangalak", "aptal", "salak", "boktan", "yarak", "amcık",
-  "piç kurusu", "amına koyayım", "ebeni sikeyim", "ananı sikeyim", "porno", 
-  "çocuk pornosu", "cocuk prno", "cocukprno", "cqcuk p0rno", "@", "t.me", 
-  "escort", "eskort", "siktim", "@m", "ag"
+  "ananı sikeyim", "porno", "çocuk pornosu", "cocuk prno", "cocukprno", "cqcuk p0rno",
+  "escort", "eskort", "siktim", "@m", "ag", "porno", "p0rn", "pornoğrafi",
+  "xxx", "sex", "sexy", "seks", "mastürbasyon", "masturbasyon", "fuck",
+  "bitch", "bastard", "slut", "whore", "dick", "pussy", "cunt", "asshole",
+  "cock", "douche", "douchebag", "faggot", "fag", "nigger", "nigga",
+  "kike", "chink", "gook", "spic", "wetback", "cracker", "redneck",
+  "coon", "beaner", "jigaboo", "jap", "spade", "gyp", "gypsy", "hooker",
+  "prostitute", "pimp", "john", "tranny", "transvestite", "transsexual",
+  "retard", "idiot", "moron", "imbecile", "dumbass", "dumb", "loser",
+  "loser", "weirdo", "psycho", "crazy", "nutcase", "lunatic", "maniac",
+  "derp", "noob", "newbie", "nub", "n00b", "pwned", "owned", "rekt",
+  "lulz", "lmao", "rofl", "wtf", "omg", "fml", "ffs", "gtfo", "stfu",
+  "lame", "suck", "blowjob", "handjob", "anal", "cum", "cumshot",
+  "jizz", "creampie", "threesome", "orgy", "gangbang", "bdsm", "fetish",
+  "bondage", "spank", "slap", "whip", "kinky", "dom", "sub", "switch",
+  "panties", "lingerie", "stripper", "pole dance", "nipples", "boobs",
+  "tits", "breasts", "ass", "butt", "booty", "junk", "dickhead", "jerk",
+  "prick", "twat", "wanker", "bollocks", "bugger", "tosser", "numpty",
+  "chav", "skank", "slag", "git", "pillock", "knobhead", "arsehole",
+  "tosser", "bloody", "bollocks", "wanker", "bastard", "prat", "muppet",
+  "git", "minger", "plonker", "twit", "twat", "prat", "daft", "dick",
+  "dickhead", "piss", "shit", "crap", "bollocks", "bugger", "arse",
+  "arsehole", "bloody", "bollocks", "wanker", "bastard", "prat",
+  // ve devam eder...
 ];
 
 
-    let replyingToId = null;
-    let messages = [];
+    const bannedAds = [
+      "http", "www", ".com", ".net", ".org", "discord.gg", "discord.com"
+    ];
 
-    socket.on('all_messages', (msgs) => {
-      messages = msgs;
-      renderMessages();
-      scrollToBottom();
-    });
-
-    socket.on('new_message', (msg) => {
-      messages.push(msg);
-      addMessage(msg);
-      scrollToBottom();
-    });
-
-    socket.on('online_count', (count) => {
-      onlineCountElem.textContent = `Çevrimiçi: ${count}`;
-    });
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      let text = input.value.trim();
-
-      if (!text) return;
-
-      if (text.length > 60) {
-        alert('Maksimum 60 karakter yazabilirsin.');
-        return;
-      }
-
-      const containsBadWord = bannedWords.some(word => {
-  return text.toLowerCase().split(/\W+/).includes(word);
-});
-
-
-      if (containsBadWord) {
-        alert('Lütfen küfürlü mesaj yazmayınız.');
-        return;
-      }
-
-      const linkPattern = /(https?:\/\/|www\.)/i;
-      if (linkPattern.test(text)) {
-        alert('Reklam veremezsin. Reklam için t.me/kartalvip e yaz.');
-        return;
-      }
-
-      const msg = {
-        id: generateId(),
-        text,
-        userId,
-        replyTo: replyingToId
-      };
-
-      socket.emit('send_message', msg);
-      input.value = '';
-      stopReplying();
-    });
-
-    cancelReplyBtn.addEventListener('click', () => {
-      stopReplying();
-    });
-
-    function addMessage(msg) {
-      messagesContainer.appendChild(createMessageElement(msg));
+    function containsBannedWords(text) {
+      const lower = text.toLowerCase();
+      return bannedWords.some(word => lower.includes(word)) || bannedAds.some(ad => lower.includes(ad));
     }
 
-    function renderMessages() {
-      messagesContainer.innerHTML = '';
-      messages.forEach(msg => {
-        messagesContainer.appendChild(createMessageElement(msg));
+    function addMessage(msg, isSelf = false) {
+      const div = document.createElement("div");
+      div.classList.add("message");
+      div.classList.add(isSelf ? "self" : "other");
+
+      const userColor = stringToColor(msg.username);
+      div.style.backgroundColor = userColor;
+
+      // Kullanıcı adı üstte
+      const usernameElem = document.createElement("div");
+      usernameElem.classList.add("username");
+      usernameElem.textContent = msg.username;
+      div.appendChild(usernameElem);
+
+      // Eğer yanıt varsa
+      if (msg.replyTo && messagesById[msg.replyTo]) {
+        const replyPreview = document.createElement("div");
+        replyPreview.classList.add("reply-preview");
+        replyPreview.textContent = `↳ ${messagesById[msg.replyTo].text}`;
+        div.appendChild(replyPreview);
+      }
+
+      // Mesaj metni
+      const textElem = document.createElement("div");
+      textElem.textContent = msg.text;
+      div.appendChild(textElem);
+
+      // Tıklayınca yanıtla seçeneği
+      div.addEventListener("click", () => {
+        replyingToId = msg.id;
+        input.placeholder = `@${msg.username} yanıtla:`;
+        cancelReplyBtn.style.display = 'inline-block';
+        input.focus();
       });
+
+      messagesContainer.appendChild(div);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      messagesById[msg.id] = msg;
     }
 
-    function createMessageElement(msg) {
-      const div = document.createElement('div');
-      div.classList.add('message');
-      div.classList.add(msg.userId === userId ? 'self' : 'other');
-      div.id = `msg-${msg.id}`;
+    function sendMessage(messageText) {
+      messageText = messageText.trim();
+      if (!messageText) return;
 
-      if (msg.replyTo) {
-        const repliedMsg = messages.find(m => m.id === msg.replyTo);
-        if (repliedMsg) {
-          const replyPreview = document.createElement('div');
-          replyPreview.classList.add('reply-preview');
-          replyPreview.classList.add(repliedMsg.userId === userId ? 'self' : 'other');
-          replyPreview.textContent = repliedMsg.text.length > 50 ? repliedMsg.text.slice(0, 50) + '…' : repliedMsg.text;
-          div.appendChild(replyPreview);
-        }
+      if (messageText.length > 60) {
+        alert("Mesaj maksimum 60 karakter olabilir.");
+        return;
       }
 
-      const textNode = document.createTextNode(msg.text);
-      div.appendChild(textNode);
-
-      if (messages.some(m => m.replyTo === msg.id && m.userId !== userId)) {
-        const indicator = document.createElement('div');
-        indicator.classList.add('reply-indicator');
-        indicator.title = "Sana gelen yanıt var. Tıklayınca o mesaja gider.";
-        indicator.textContent = "!";
-        indicator.onclick = (e) => {
-          e.stopPropagation();
-          const targetMsg = document.getElementById(`msg-${msg.id}`);
-          if (targetMsg) {
-            targetMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            targetMsg.style.backgroundColor = '#ef4444';
-            setTimeout(() => {
-              targetMsg.style.backgroundColor = '';
-            }, 1200);
-          }
-        };
-        div.appendChild(indicator);
+      if (containsBannedWords(messageText)) {
+        alert("Mesajınızda yasaklı kelime veya reklam içeriği var.");
+        return;
       }
 
-      div.style.cursor = 'pointer';
-      div.title = "Mesaja tıklayarak yanıtla";
-      div.onclick = () => {
-        startReplying(msg.id, msg.text);
+      const messageData = {
+        id: Date.now() + Math.random(),
+        userId,
+        username,
+        text: messageText,
+        replyTo: replyingToId || null,
+        timestamp: new Date().toISOString()
       };
 
-      return div;
-    }
-
-    function startReplying(id, text) {
-      replyingToId = id;
-      input.placeholder = `Yanıt: ${text.length > 40 ? text.slice(0, 40) + '…' : text}`;
-      cancelReplyBtn.style.display = 'inline-block';
+      socket.emit("newMessage", messageData);
+      addMessage(messageData, true);
+      replyingToId = null;
+      cancelReplyBtn.style.display = 'none';
+      input.value = "";
+      input.placeholder = "Mesaj yaz (max 60 karakter)...";
       input.focus();
     }
 
-    function stopReplying() {
+    // Mesajları id bazlı sakla
+    const messagesById = {};
+
+    usernameSubmit.addEventListener('click', () => {
+      const name = usernameInput.value.trim();
+      if (!name) {
+        usernameError.textContent = "Kullanıcı adı boş olamaz.";
+        return;
+      }
+      if (name.length > 10) {
+        usernameError.textContent = "Kullanıcı adı maksimum 10 karakter olabilir.";
+        return;
+      }
+      // İzin verilen karakterler: Türkçe karakterler dahil alfanümerik + alt çizgi
+      if (!/^[a-zA-Z0-9çğıöşüÇĞİÖŞÜ_]+$/.test(name)) {
+        usernameError.textContent = "Kullanıcı adı sadece harf, rakam ve alt çizgi içerebilir.";
+        return;
+      }
+
+      username = name;
+      userId = Date.now() + Math.random(); // Basit kullanıcı id
+      usernameError.textContent = "";
+
+      // Overlay kapat, chat aç
+      usernameOverlay.style.display = "none";
+      chatContainer.style.display = "flex";
+
+      // Mesaj kutusunu aktif yap
+      input.disabled = false;
+      form.querySelector('button[type="submit"]').disabled = false;
+      input.focus();
+
+      socket.emit("newUser", {username, userId});
+    });
+
+    usernameInput.addEventListener('keydown', (e) => {
+      if(e.key === "Enter") {
+        usernameSubmit.click();
+      }
+    });
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      if (!username) return;
+      sendMessage(input.value);
+    });
+
+    cancelReplyBtn.addEventListener('click', () => {
       replyingToId = null;
-      input.placeholder = 'Mesaj yaz (max 60 karakter)...';
+      input.placeholder = "Mesaj yaz (max 60 karakter)...";
       cancelReplyBtn.style.display = 'none';
-    }
+      input.focus();
+    });
 
-    function scrollToBottom() {
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
+    // Socket.IO events
+    socket.on("connect", () => {
+      if(username && userId) {
+        socket.emit("newUser", {username, userId});
+      }
+    });
 
-    function generateId() {
-      return Math.random().toString(36).substr(2, 9);
-    }
+    socket.on("onlineUsers", count => {
+      onlineCountElem.textContent = `Çevrimiçi: ${count}`;
+    });
+
+    socket.on("newMessage", msg => {
+      if(msg.userId === userId) return; // Zaten ekledik
+      addMessage(msg, false);
+    });
+
   </script>
 </body>
 </html>

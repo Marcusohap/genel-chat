@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+</head>
+<body>
+  <h2>Admin Panel</h2>
+  <input type="password" id="adminPassword" placeholder="Admin Şifresi">
+  <button onclick="loginAsAdmin()">Giriş</button>
+  <div id="adminArea" style="display:none;">
+    <h3>Kullanıcı Listesi</h3>
+    <div id="admin-users"></div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+  <script>
+    const socket = io(); // aynı backend'e bağlanır
+    let isAdmin = false;
+
+    function loginAsAdmin() {
+      const pw = document.getElementById("adminPassword").value;
+      if (pw === "656832") {
+        isAdmin = true;
+        document.getElementById("adminArea").style.display = "block";
+        updateAdminPanel();
+      } else {
+        alert("Şifre yanlış.");
+      }
+    }
+
+    function updateAdminPanel() {
+      socket.emit("get_users");
+    }
+
+    socket.on("user_list", function(users) {
+      const adminUsers = document.getElementById("admin-users");
+      adminUsers.innerHTML = "";
+      users.forEach(user => {
+        const btn = `<button onclick="banUser('${user}')">Yasakla</button>`;
+        adminUsers.innerHTML += `<div>${user} ${btn}</div>`;
+      });
+    });
+
+    function banUser(user) {
+      socket.emit("ban_user", user);
+      alert(`${user} yasaklandı.`);
+    }
+  </script>
+</body>
+</html>
