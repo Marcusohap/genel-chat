@@ -1,10 +1,19 @@
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
+const path = require('path');
 const { Server } = require('socket.io');
 
 const app = express();
 app.use(cors()); // CORS'u genel açıyoruz
+
+// public klasöründen statik dosyaları servis et
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Ana sayfa için index.html dosyasını gönder
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'));
+});
 
 const server = http.createServer(app);
 
@@ -19,16 +28,13 @@ io.on('connection', (socket) => {
   onlineUsers++;
   console.log('Yeni kullanıcı bağlandı, çevrimiçi:', onlineUsers);
 
-  // Çevrimiçi kullanıcı sayısını tüm clientlara gönder
   io.emit('online_count', onlineUsers);
 
-  // Bağlanan kullanıcıya tüm mesajları gönder
   socket.emit('all_messages', messages);
 
-  // Yeni mesaj geldiğinde
   socket.on('send_message', (msg) => {
     messages.push(msg);
-    io.emit('new_message', msg); // Herkese gönder
+    io.emit('new_message', msg);
   });
 
   socket.on('disconnect', () => {

@@ -1,49 +1,48 @@
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-const fs = require("fs");
+const express = require('express');
+const http = require('http');
+const cors = require('cors');
+const path = require('path');
+const { Server } = require('socket.io');
 
 const app = express();
+app.use(cors());
+
+// Public klasörünü statik olarak sun
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'));
+});
+
 const server = http.createServer(app);
-const io = new Server(server);
 
-// Render ortamından port al, yoksa 3000 kullan
-const PORT = process.env.PORT || 3000;
+const io = new Server(server, {
+  cors: { origin: "*" }
+});
 
-// Badwords listesini yükle
-const badWords = JSON.parse(fs.readFileSync("badwords.json", "utf-8"));
+let messages = [];
+let onlineUsers = 0;
 
-// Public klasöründeki dosyaları statik servis et
-app.use(express.static("public"));
+io.on('connection', (socket) => {
+  onlineUsers++;
+  console.log('Yeni kullanıcı bağlandı, çevrimiçi:', onlineUsers);
 
-io.on("connection", (socket) => {
-  console.log("Yeni kullanıcı bağlandı");
+  io.emit('online_count', onlineUsers);
+  socket.emit('all_messages', messages);
 
-  socket.on("chatMessage", (msg) => {
-    let message = msg.text;
-    const username = msg.user;
+  socket.on('send_message', (msg) => {
+    messages.push(msg);
+    io.emit('new_message', msg);
+  });
 
-    // Küfürlü kelimeleri sansürle
-    badWords.forEach(word => {
-      const regex = new RegExp(word, "gi");
-      message = message.replace(regex, "****");
-    });
-
-    // Link ve @ ile başlayanları engelle
-    if (/@|https?:\/\/|www\./gi.test(message)) return;
-
-    // 60 karakter sınırı
-    if (message.length > 60) return;
-
-    // Mesajı tüm kullanıcılara gönder
-    io.emit("chatMessage", {
-      user: username,
-      text: message
-    });
+  socket.on('disconnect', () => {
+    onlineUsers--;
+    console.log('Kullanıcı ayrıldı, çevrimiçi:', onlineUsers);
+    io.emit('online_count', onlineUsers);
   });
 });
 
-// Sunucuyu başlat
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);
 });
