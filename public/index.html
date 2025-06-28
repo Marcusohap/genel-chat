@@ -228,7 +228,43 @@
 
     const userId = Math.random().toString(36).substring(2, 10);
 
-    const bannedWords = [/*... küfürlü kelimeler ...*/];
+    const bannedWords = [
+  "amk", "ananı", "ananı sikiyim", "aq", "piç", "orospu", "siktir", "göt",
+  "yarak", "kahpe", "ibne", "sürtük", "mal", "gerizekalı", "şerefsiz",
+  "dangalak", "bok", "daşşak", "kaşar", "kaltak", "gavur", "ebenin amı",
+  "amcık", "yarak kafalı", "pezevenk", "salak", "aptal", "puşt", "gavat",
+  "pezevenk", "amına koyayım", "yavşak", "sikik", "piç kurusu", "domuz",
+  "orospu çocuğu", "am", "amına", "amcık çocuğu", "kıç", "sikiş", "sikik piç",
+  "şapşal", "gerzek", "bela", "oç", "ibnelik", "ananın amı", "ananın amk",
+  "yarak", "amcık", "sikmek", "sikerim", "amcıklar", "yarrak", "amcık oğlu",
+  "puşt", "götveren", "ebeni sikeyim", "ananı sikeyim", "pezevenk", "amına",
+  "ebenin oğlu", "piç kurusu", "amına koyayım", "amı", "siktiğimin",
+  "yarak kafalı", "yarak", "salak", "aptal", "boktan", "şerefsiz", "mal",
+  "gerizekalı", "götveren", "döl", "amcık", "kaşar", "kaltak", "gavat",
+  "sürtük", "amcık çocuğu", "amına koyayım", "ananı sikeyim", "amk", "bok",
+  "piç", "sik", "ananın amı", "ananın amk", "siktir git", "göt", "yarak",
+  "amcık", "kaltak", "kahpe", "şerefsiz", "sürtük", "dangalak", "aptal",
+  "gerzek", "salak", "mal", "amına koyayım", "yavşak", "amcık oğlu", "amına",
+  "yarrak", "piç kurusu", "ebeni sikeyim", "ananı sikeyim", "bok", "götveren",
+  "amcık", "yarak", "mal", "aptal", "şapşal", "dangalak", "gerizekalı", "mal",
+  "bok", "yarak kafalı", "amına koyayım", "puşt", "gavat", "pezevenk",
+  "piç", "orospu çocuğu", "sikik", "amcık", "amına", "amına koyayım",
+  "amcık oğlu", "yavşak", "götveren", "sürtük", "kaltak", "kaşar",
+  "kahpe", "şerefsiz", "mal", "gerizekalı", "dangalak", "aptal", "salak",
+  "boktan", "yarak", "amcık", "piç kurusu", "amına koyayım", "ebeni sikeyim",
+  "ananı sikeyim", "amk", "bok", "piç", "sik", "ananın amı", "ananın amk",
+  "siktir git", "göt", "yarak", "amcık", "kaltak", "kahpe", "şerefsiz",
+  "sürtük", "dangalak", "aptal", "gerzek", "salak", "mal", "amına koyayım",
+  "yavşak", "amcık oğlu", "amına", "yarrak", "piç kurusu", "ebeni sikeyim",
+  "ananı sikeyim", "bok", "götveren", "amcık", "yarak", "mal", "aptal",
+  "şapşal", "dangalak", "gerizekalı", "mal", "bok", "yarak kafalı",
+  "amına koyayım", "puşt", "gavat", "pezevenk", "piç", "orospu çocuğu",
+  "sikik", "amcık", "amına", "amına koyayım", "amcık oğlu", "yavşak",
+  "götveren", "sürtük", "kaltak", "kaşar", "kahpe", "şerefsiz", "mal",
+  "gerizekalı", "dangalak", "aptal", "salak", "boktan", "yarak", "amcık",
+  "piç kurusu", "amına koyayım", "ebeni sikeyim", "ananı sikeyim"
+];
+
 
     let replyingToId = null;
     let messages = [];
