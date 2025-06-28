@@ -1,47 +1,47 @@
-// server.js
 const express = require('express');
 const http = require('http');
+const cors = require('cors');
+const path = require('path');
 const { Server } = require('socket.io');
 
 const app = express();
+app.use(cors());
+
+// Public klasörünü statik olarak sun
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'));
+});
+
 const server = http.createServer(app);
-const io = new Server(server);
 
-// Statik dosyaları sun (örneğin index.html)
-app.use(express.static(__dirname));
+const io = new Server(server, {
+  cors: { origin: "*" }
+});
 
-// Çevrimiçi kullanıcı sayısı ve kullanıcı listesi
-let onlineUsers = new Map();
+let messages = [];
+let onlineUsers = 0;
 
 io.on('connection', (socket) => {
-  console.log('Bir kullanıcı bağlandı:', socket.id);
+  onlineUsers++;
+  console.log('Yeni kullanıcı bağlandı, çevrimiçi:', onlineUsers);
 
-  // Yeni kullanıcı geldiğinde kayıt et
-  socket.on('newUser', ({ username, userId }) => {
-    onlineUsers.set(socket.id, { username, userId });
-    console.log(`${username} bağlandı.`);
-    io.emit('onlineUsers', onlineUsers.size);
+  io.emit('online_count', onlineUsers);
+  socket.emit('all_messages', messages);
+
+  socket.on('send_message', (msg) => {
+    messages.push(msg);
+    io.emit('new_message', msg);
   });
 
-  // Yeni mesaj geldiğinde herkese yayınla
-  socket.on('newMessage', (messageData) => {
-    // Mesajı tüm kullanıcılara gönder, gönderen hariç
-    socket.broadcast.emit('newMessage', messageData);
-  });
-
-  // Kullanıcı ayrılınca güncelle
   socket.on('disconnect', () => {
-    const user = onlineUsers.get(socket.id);
-    if(user) {
-      console.log(`${user.username} ayrıldı.`);
-      onlineUsers.delete(socket.id);
-      io.emit('onlineUsers', onlineUsers.size);
-    }
+    onlineUsers--;
+    console.log('Kullanıcı ayrıldı, çevrimiçi:', onlineUsers);
+    io.emit('online_count', onlineUsers);
   });
 });
 
-// Sunucu 3000 portunda çalışsın
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Sunucu ${PORT} portunda çalışıyor...`);
-});
+  console.log(Sunucu çalışıyor: http://localhost:${PORT});

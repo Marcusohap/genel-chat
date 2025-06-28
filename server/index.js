@@ -5,94 +5,46 @@ const path = require('path');
 const { Server } = require('socket.io');
 
 const app = express();
-app.use(cors());
+app.use(cors()); // CORS'u genel açıyoruz
+
+// public klasöründen statik dosyaları servis et
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Ana sayfa (index.html)
+// Ana sayfa için index.html dosyasını gönder
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-// Admin paneli (admin.html)
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/admin.html'));
-});
-
 const server = http.createServer(app);
+
 const io = new Server(server, {
-  cors: { origin: "*" }
+  cors: { origin: "*" } // Her yerden erişime izin ver
 });
 
-// Veri yapıları
 let messages = [];
 let onlineUsers = 0;
-let userMap = {};        // socket.id => username
-let bannedUsers = new Set();
-const badWords = ['salak', 'aptal', 'gerizekalı', 'küfür1', 'küfür2']; // yasaklı kelimeler
 
 io.on('connection', (socket) => {
-  let currentUser = null;
+  onlineUsers++;
+  console.log('Yeni kullanıcı bağlandı, çevrimiçi:', onlineUsers);
 
-  socket.on('set_username', (username) => {
-    if (bannedUsers.has(username)) {
-      socket.emit('banned');
-      socket.disconnect();
-      return;
-    }
+  io.emit('online_count', onlineUsers);
 
-    currentUser = username;
-    userMap[socket.id] = username;
-    onlineUsers++;
-    console.log(`Kullanıcı bağlandı: ${username} (${onlineUsers} çevrimiçi)`);
-
-    io.emit('online_count', onlineUsers);
-    socket.emit('all_messages', messages);
-    io.emit('user_list', Object.values(userMap));
-  });
+  socket.emit('all_messages', messages);
 
   socket.on('send_message', (msg) => {
-    if (!currentUser) return;
-
-    const lower = msg.toLowerCase();
-    const containsBadWord = badWords.some(word => lower.includes(word));
-    if (containsBadWord) {
-      socket.emit('message_blocked', 'Mesajınız uygunsuz içerik nedeniyle gönderilmedi.');
-      return;
-    }
-
-    const fullMessage = { user: currentUser, text: msg };
-    messages.push(fullMessage);
-    io.emit('new_message', fullMessage);
-  });
-
-  socket.on('ban_user', (username) => {
-    bannedUsers.add(username);
-    for (let id in userMap) {
-      if (userMap[id] === username) {
-        io.to(id).emit('banned');
-        io.sockets.sockets.get(id).disconnect();
-      }
-    }
-    console.log(`Yasaklandı: ${username}`);
-    io.emit('user_list', Object.values(userMap));
-  });
-
-  socket.on('get_users', () => {
-    socket.emit('user_list', Object.values(userMap));
+    messages.push(msg);
+    io.emit('new_message', msg);
   });
 
   socket.on('disconnect', () => {
-    if (currentUser) {
-      onlineUsers--;
-      delete userMap[socket.id];
-      io.emit('online_count', onlineUsers);
-      io.emit('user_list', Object.values(userMap));
-      console.log(`Kullanıcı ayrıldı: ${currentUser} (${onlineUsers} çevrimiçi)`);
-    }
+    onlineUsers--;
+    console.log('Kullanıcı ayrıldı, çevrimiçi:', onlineUsers);
+    io.emit('online_count', onlineUsers);
   });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(Sunucu çalışıyor: http://0.0.0.0:${PORT});
 });
