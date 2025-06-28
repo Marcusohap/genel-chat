@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>GENEL CHAT</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 10px;
+    }
+    .chat-container {
+      background: #1e293b;
+      width: 100%;
+      max-width: 500px;
+      height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-header {
+      background: #334155;
+      padding: 12px 16px 8px 16px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 22px;
+      border-bottom: 1px solid #475569;
+      position: relative;
+      user-select: none;
+    }
+    .online-count {
+      position: absolute;
+      right: 16px;
+      top: 12px;
+      font-size: 14px;
+      color: #94a3b8;
+      font-weight: 400;
+    }
+    .messages {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+    .message {
+      padding: 10px 14px;
+      border-radius: 8px;
+      max-width: 80%;
+      word-wrap: break-word;
+      font-size: 15px;
+      line-height: 1.3;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      position: relative;
+    }
+    .message.self {
+      background: #3b82f6;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+    .message.other {
+      background: #475569;
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+    }
+    /* Yanıt bildirimi simgesi */
+    .reply-indicator {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 14px;
+      height: 14px;
+      background: #ef4444;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      user-select: none;
+      transition: background 0.3s;
+    }
+    .reply-indicator:hover {
+      background: #b91c1c;
+    }
+    .reply-preview {
+      font-size: 13px;
+      color: #cbd5e1;
+      font-style: italic;
+      margin-bottom: 4px;
+      padding-left: 8px;
+      border-left: 3px solid #64748b;
+      max-width: 80%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: default;
+    }
+    .reply-preview.self {
+      border-left-color: #2563eb;
+    }
+    .chat-form {
+      display: flex;
+      border-top: 1px solid #475569;
+      padding: 8px 12px;
+      background: #334155;
+      align-items: center;
+      gap: 8px;
+    }
+    .chat-form input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      background: #1e293b;
+      color: white;
+      border-radius: 6px;
+      transition: background 0.3s ease;
+    }
+    .chat-form input:focus {
+      background: #28343f;
+    }
+    .chat-form button, .chat-form .cancel-reply {
+      padding: 12px 16px;
+      background: #3b82f6;
+      border: none;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.3s ease;
+      user-select: none;
+    }
+    .chat-form button:hover, .chat-form .cancel-reply:hover {
+      background: #2563eb;
+    }
+    .chat-form .cancel-reply {
+      background: #ef4444;
+    }
+    .chat-form .cancel-reply:hover {
+      background: #b91c1c;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    @media (max-width: 600px) {
+      .chat-container {
+        height: 95vh;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      GENEL CHAT
+      <span class="online-count" id="onlineCount">Çevrimiçi: 0</span>
+    </div>
+    <div class="messages" id="messages"></div>
+    <form class="chat-form" id="form">
+      <input
+        id="input"
+        autocomplete="off"
+        maxlength="60"
+        placeholder="Mesaj yaz (max 60 karakter)..."
+      />
+      <button type="submit">Gönder</button>
+      <button type="button" class="cancel-reply" title="Yanıtlamayı iptal et" style="display:none;">İptal</button>
+    </form>
+  </div>
+
+  <script>
+    const socket = io('http://localhost:3000'); // Sunucu adresini gerektiği gibi değiştir
+
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messagesContainer = document.getElementById('messages');
+    const onlineCountElem = document.getElementById('onlineCount');
+    const cancelReplyBtn = form.querySelector('.cancel-reply');
+
+    const userId = Math.random().toString(36).substring(2, 10);
+
+    // Küfürlü kelimeler listesi (örnek)
+    const bannedWords = [
+      "amk", "siktir", "orospu", "aq", "piç", "ananı", "sikerim", "mal", "gerizekalı",
+      "şerefsiz", "yarrak", "göt", "yarak", "kahpe", "orospu çocuğu", "piç kurusu",
+      "ibne", "sürtük", "puşt", "gavat", "pezevenk", "mal", "salak", "aptal",
+      "dangalak", "şapşal", "gerzek", "bok", "çük", "domuz", "daşşak",
+      "kaşar", "kaltak", "gavur", "şerefsiz", "döl", "ebenin amı",
+      "ebeni sikeyim", "anani sikiyim", "kıç", "am", "amına koyayım",
+      "yavşak", "götveren", "amcık", "amcık çocuğu", "yarak kafalı",
+      "pezevenk", "boktan", "piç kurusu", "sürtük", "sperm", "ebenin oğlu",
+      "kaltak", "sikik", "amına koyayım", "yarak", "sikik piç", "kıç",
+      "bela", "şerefsiz", "pezevenk", "götveren", "ananı sikeyim", "yarak kafalı", "oç","amcık",
+      "ibne", "sikikler", "sikiş",  "pasif", "aktif", "gay"
+    ];
+
+    // Aktif yanıtlanan mesaj id'si (null ise yanıt yok)
+    let replyingToId = null;
+
+    // Mesajları sakla (serverdan gelen)
+    let messages = [];
+
+    // Mesajları eklerken her mesaj DOM elemanına id olarak mesajın id'sini veriyoruz
+    // Böylece yanıt mesajına scroll yapabiliriz
+
+    // Serverdan önceki tüm mesajları al
+    socket.on('all_messages', (msgs) => {
+      messages = msgs;
+      renderMessages();
+      scrollToBottom();
+    });
+
+    // Yeni mesaj geldiğinde
+    socket.on('new_message', (msg) => {
+      messages.push(msg);
+      addMessage(msg);
+      scrollToBottom();
+    });
+
+    // Çevrimiçi kullanıcı sayısını güncelle
+    socket.on('online_count', (count) => {
+      onlineCountElem.textContent = `Çevrimiçi: ${count}`;
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      let text = input.value.trim();
+
+      if (!text) return;
+
+      if (text.length > 60) {
+        alert('Maksimum 60 karakter yazabilirsin.');
+        return;
+      }
+
+      // Küfür filtresi (büyük/küçük harf duyarsız)
+      const containsBadWord = bannedWords.some(word => text.toLowerCase().includes(word));
+
+      if (containsBadWord) {
+        alert('Lütfen küfürlü mesaj yazmayınız.');
+        return;
+      }
+
+      // Link/reklam kontrolü
+      const linkPattern = /(https?:\/\/|www\.)/i;
+      if (linkPattern.test(text)) {
+        alert('Reklam veremezsin. Reklam için t.me/kartalvip e yaz.');
+        return;
+      }
+
+      // Mesaj objesi oluştur, yanıt varsa referans ekle
+      const msg = {
+        id: generateId(),
+        text,
+        userId,
+        replyTo: replyingToId // null veya yanıtlanan mesajın id'si
+      };
+
+      socket.emit('send_message', msg);
+      input.value = '';
+      stopReplying();
+    });
+
+    cancelReplyBtn.addEventListener('click', () => {
+      stopReplying();
+    });
+
+    // Mesaj listesine yeni mesaj ekle
+    function addMessage(msg) {
+      messagesContainer.appendChild(createMessageElement(msg));
+    }
+
+    // Tüm mesajları render et
+    function renderMessages() {
+      messagesContainer.innerHTML = '';
+      messages.forEach(msg => {
+        messagesContainer.appendChild(createMessageElement(msg));
+      });
+    }
+
+    // Mesaj elemanı oluştur
+    function createMessageElement(msg) {
+      const div = document.createElement('div');
+      div.classList.add('message');
+      div.classList.add(msg.userId === userId ? 'self' : 'other');
+      div.id = `msg-${msg.id}`;
+
+      // Eğer mesaj yanıt ise, yanıtlanan mesajdan kısa önizleme al
+      if (msg.replyTo) {
+        const repliedMsg = messages.find(m => m.id === msg.replyTo);
+        if (repliedMsg) {
+          const replyPreview = document.createElement('div');
+          replyPreview.classList.add('reply-preview');
+          replyPreview.classList.add(repliedMsg.userId === userId ? 'self' : 'other');
+          replyPreview.textContent = repliedMsg.text.length > 50 ? repliedMsg.text.slice(0, 50) + '…' : repliedMsg.text;
+          div.appendChild(replyPreview);
+        }
+      }
+
+      // Mesaj metni
+      const textNode = document.createTextNode(msg.text);
+      div.appendChild(textNode);
+
+      // Eğer mesaj başkası tarafından yanıtlandıysa, mesajda kırmızı işaret göster
+      // Yani başka mesajlarda bu mesajın id'si replyTo ise göster
+      if (messages.some(m => m.replyTo === msg.id && m.userId !== userId)) {
+        const indicator = document.createElement('div');
+        indicator.classList.add('reply-indicator');
+        indicator.title = "Sana gelen yanıt var. Tıklayınca o mesaja gider.";
+        indicator.textContent = "!";
+        indicator.onclick = (e) => {
+          e.stopPropagation();
+          // O mesaja git
+          const targetMsg = document.getElementById(`msg-${msg.id}`);
+          if (targetMsg) {
+            targetMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Geçici vurgu efekti verelim
+            targetMsg.style.backgroundColor = '#ef4444';
+            setTimeout(() => {
+              targetMsg.style.backgroundColor = '';
+            }, 1200);
+          }
+        };
+        div.appendChild(indicator);
+      }
+
+      // Mesaja tıklayınca yanıt moduna geç
+      div.style.cursor = 'pointer';
+      div.title = "Mesaja tıklayarak yanıtla";
+      div.onclick = () => {
+        startReplying(msg.id, msg.text);
+      };
+
+      return div;
+    }
+
+    // Yanıt moduna başla
+    function startReplying(id, text) {
+      replyingToId = id;
+      input.focus();
+      cancelReplyBtn.style.display = 'inline-block';
+      // Küçük bir önizleme gösterelim input üstünde (placeholder yerine değil)
+      input.placeholder = `Yanıt: ${text.length > 40 ? text.slice(0,40) + '…' : text}`;
+    }
+
+    // Yanıt modunu bitir
+    function stopReplying() {
+      replyingToId = null;
+      input.placeholder = "Mesaj yaz (max 60 karakter)...";
+      cancelReplyBtn.style.display = 'none';
+    }
+
+    // Kaydırma fonksiyonu
+    function scrollToBottom() {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // ID üretici
+    function generateId() {
+      // Basit random string id
+      return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+    }
+  </script>
+</body>
+</html>
