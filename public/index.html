@@ -296,7 +296,10 @@
         return;
       }
 
-      const containsBadWord = bannedWords.some(word => text.toLowerCase().includes(word));
+      const containsBadWord = bannedWords.some(word => {
+  return text.toLowerCase().split(/\W+/).includes(word);
+});
+
 
       if (containsBadWord) {
         alert('Lütfen küfürlü mesaj yazmayınız.');
